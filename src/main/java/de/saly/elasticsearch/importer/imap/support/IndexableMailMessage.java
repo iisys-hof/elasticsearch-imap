@@ -27,7 +27,6 @@ package de.saly.elasticsearch.importer.imap.support;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +51,7 @@ import javax.mail.internet.InternetAddress;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonAnyGetter;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -96,6 +96,12 @@ public class IndexableMailMessage {
         im.setFolderFullName(jmm.getFolder().getFullName());
 
         im.setFolderUri(jmm.getFolder().getURLName().toString());
+        
+        // try extracting user name
+        String userId = jmm.getFolder().getURLName().toString();
+        userId = userId.split("\\*")[0];
+        userId = userId.substring(userId.lastIndexOf('/') + 1);
+        im.setUserId(userId);
 
         im.setContentType(jmm.getContentType());
         im.setSubject(jmm.getSubject());
@@ -316,6 +322,8 @@ public class IndexableMailMessage {
     private String folderFullName;
 
     private String folderUri;
+    
+    private String userId;
 
     private Address from;
 
@@ -331,10 +339,12 @@ public class IndexableMailMessage {
 
     private Date receivedDate;
 
+    @JsonProperty("createDate")
     private Date sentDate;
 
     private int size;
 
+    @JsonProperty("title")
     private String subject;
 
     private String textContent;
@@ -428,6 +438,10 @@ public class IndexableMailMessage {
         return folderUri;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     public Address getFrom() {
         return from;
     }
@@ -457,11 +471,31 @@ public class IndexableMailMessage {
         return sentDate;
     }
 
+    @JsonProperty("dc:created")
+    public Date getCustomSentDate() {
+        return sentDate;
+    }
+
+    @JsonProperty("createDate")
+    public Date getCustomCreateDate() {
+        return sentDate;
+    }
+
     public int getSize() {
         return size;
     }
 
     public String getSubject() {
+        return subject;
+    }
+    
+    @JsonProperty("dc:title")
+    public String getRenamedSubject() {
+        return subject;
+    }
+    
+    @JsonProperty("title")
+    public String getRenamedTitle() {
         return subject;
     }
 
@@ -525,6 +559,10 @@ public class IndexableMailMessage {
 
     public void setFolderUri(final String folderUri) {
         this.folderUri = folderUri;
+    }
+
+    public void setUserId(final String userId) {
+        this.userId = userId;
     }
 
     public void setFrom(final Address from) {

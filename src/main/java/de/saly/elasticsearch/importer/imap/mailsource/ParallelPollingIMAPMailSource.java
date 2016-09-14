@@ -375,6 +375,7 @@ public class ParallelPollingIMAPMailSource implements MailSource {
                     highestUID = 1;
                 }
                 
+                // javadoc says last message is always returned
                 Message[] msgsnew = uidfolder.getMessagesByUID(highestUID, UIDFolder.LASTUID);
 
                 if (msgsnew.length > 0) {
@@ -382,8 +383,17 @@ public class ParallelPollingIMAPMailSource implements MailSource {
                     System.out.println("lastuid: "+uidfolder.getUID(msgsnew[msgsnew.length-1]));
                     
                     // msgnew.size is always >= 1
-                    if (highestUID > 1 && uidfolder.getUID(msgsnew[msgsnew.length-1]) <= highestUID) {
-                         msgsnew = (Message[]) ArrayUtils.remove(msgsnew, msgsnew.length-1);
+                    // this previously always reindexed the last mail in the folder
+                    if (uidfolder.getUID(msgsnew[msgsnew.length-1]) <= highestUID)
+                    {
+                         if(msgsnew.length > 1)
+                         {
+                             msgsnew = (Message[]) ArrayUtils.remove(msgsnew, msgsnew.length-1);
+                         }
+                         else
+                         {
+                             msgsnew = new Message[0];
+                         }
                     }
                                         
                     if(msgsnew.length > 0) {
